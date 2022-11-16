@@ -3,6 +3,11 @@ import random
 #Global Variables
 population = 10
 generations = 10000
+num = int(input("How big is your gene pool? \n"))
+domain = []
+
+for x in range(1, num):
+    domain.append(x)
 
 #Organism Class 
 class Organism:
@@ -13,7 +18,7 @@ class Organism:
 
     def __str__(self):
 
-        return 'DNA_Code: ' + str(self.code) + ' Fitness: ' + str(self.fitness)
+        return 'DNA Code: ' + str(self.code) + ' Fitness: ' + str(self.fitness)
 
 #Mathematical Functions
 def rosenbrockvalley(i,j):
@@ -26,7 +31,6 @@ def rosenbrockvalley(i,j):
 
 def dnageneration():
 
-    domain = [1,2,3,4,5,6,7,8,9]
     dnalist = []
 
     while len(dnalist) != (population):
@@ -44,7 +48,7 @@ def ga():
 
     indicator = input("Type r for Rosenbrock's Valley:  \n")
 
-    organisms = init_organisms(population, dnageneration())
+    organisms = init_organisms(dnageneration())
 
     for generation in range(generations):
         print('Generation: ' + str(generation)) 
@@ -54,13 +58,14 @@ def ga():
         organisms = crossover(organisms)
         organisms = mutation(organisms)
 
-        if any(organism.fitness >= 10000000 for organism in organisms):
-
-            print('Threshold met!')
+        if any(organism.code == (max(domain),max(domain),max(domain)) for organism in organisms):
+            print('Function Optimized on generation ' + str(generation))
             exit(0)
 
 
-def init_organisms(population, dnalist):
+
+
+def init_organisms(dnalist):
 
     sample = []
     for x in range(len(dnalist)):
@@ -73,7 +78,7 @@ def fitness(organisms, indicator):
 
     if indicator.lower() == 'r':
         for organism in organisms:
-            organism.fitness = rosenbrockvalley(organism.code[0],organism.code[1])
+            organism.fitness = rosenbrockvalley((organism.code[0]*organism.code[1]*organism.code[2]), sum(list(organism.code)))
 
     return organisms
 
@@ -83,7 +88,6 @@ def selection(organisms):
     organisms = sorted(organisms, key=lambda organism: organism.fitness, reverse=True)
     print('\n'.join(map(str, organisms)))
     organisms = organisms[:int(0.4 * len(organisms))]
-    print(organisms)
 
     return organisms
 
@@ -123,8 +127,6 @@ def crossover(organisms):
 
 
 def mutation(organisms):
-
-    domain = [1,2,3,4,5,6,7,8,9]
 
     for organism in organisms:
 
