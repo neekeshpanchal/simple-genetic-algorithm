@@ -4,7 +4,14 @@ import random
 population = 10
 generations = 10000
 num = int(input("How big is your gene pool? \n"))
+num+=1
 domain = []
+
+choice = int(input("""
+Pick your choice of optimization: \n
+(1) Maximize
+(2) Minimize
+"""))
 
 for x in range(1, num):
     domain.append(x)
@@ -58,9 +65,15 @@ def ga():
         organisms = crossover(organisms)
         organisms = mutation(organisms)
 
-        if any(organism.code == (max(domain),max(domain),max(domain)) for organism in organisms):
-            print('Function Optimized on generation ' + str(generation))
-            exit(0)
+        if choice == 1:
+            if any(organism.code == (max(domain),max(domain),max(domain)) for organism in organisms):
+                print('Function Maximized on generation ' + str(int(generation+1)))
+                exit(0)
+        
+        else:
+            if any(organism.code == (min(domain),min(domain),min(domain)) for organism in organisms):
+                print('Function Minimized on generation ' + str(int(generation+1)))
+                exit(0)
 
 
 
@@ -87,7 +100,12 @@ def selection(organisms):
 
     organisms = sorted(organisms, key=lambda organism: organism.fitness, reverse=True)
     print('\n'.join(map(str, organisms)))
-    organisms = organisms[:int(0.4 * len(organisms))]
+
+    if choice == 1:
+        organisms = organisms[:int(0.4 * len(organisms))]
+
+    else: 
+        organisms = organisms[int(0.4 * len(organisms)):]
 
     return organisms
 
