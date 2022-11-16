@@ -42,7 +42,7 @@ def dnageneration():
 
 def ga():
 
-    indicator = input("Type r for Rosenbrock's Valley:  ")
+    indicator = input("Type r for Rosenbrock's Valley:  \n")
 
     organisms = init_organisms(population, dnageneration())
 
@@ -54,7 +54,7 @@ def ga():
         organisms = crossover(organisms)
         organisms = mutation(organisms)
 
-        if any(organism.fitness >= 10000000 for organism in organisms): #This line is a work in progress (dependent on type of optimization/function)
+        if any(organism.fitness >= 10000000 for organism in organisms):
 
             print('Threshold met!')
             exit(0)
@@ -83,6 +83,7 @@ def selection(organisms):
     organisms = sorted(organisms, key=lambda organism: organism.fitness, reverse=True)
     print('\n'.join(map(str, organisms)))
     organisms = organisms[:int(0.4 * len(organisms))]
+    print(organisms)
 
     return organisms
 
@@ -91,7 +92,8 @@ def crossover(organisms):
 
     offspring = []
 
-    for x in range(int(population - len(organisms) / 2)):
+
+    for x in range(int((population - len(organisms)) / 2)):
 
         parent1 = organisms[0]
         parent2 = organisms[1]
@@ -113,8 +115,29 @@ def crossover(organisms):
         offspring.append(child2)
         offspring.append(child3)
         offspring.append(child4)
+
     
     organisms.extend(offspring)
 
+    return organisms
+
+
+def mutation(organisms):
+
+    domain = [1,2,3,4,5,6,7,8,9]
+
+    for organism in organisms:
+
+        for x in range(len(organism.code)):
+
+            if random.uniform(0.0, 1.0) <= 0.1:
+
+                code = list(organism.code)
+                code[x] = random.choice(domain)
+                organism.code = tuple(code)
 
     return organisms
+
+
+
+ga()
