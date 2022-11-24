@@ -199,3 +199,5 @@ def mutation(organisms):
 
 
 ga()
+
+#PRACTICE
