@@ -4,7 +4,7 @@ import matplotlib.pyplot as plot
 #Global Variables and Inputs
 poplength = 40
 generations = 100000
-bitlength = 15
+bitlength = 16
 crossover_rate = 0.4
 mutation_rate = 0.04
 
@@ -54,7 +54,7 @@ def decoder_r(individual):
     n = 3
     bits_list = string_split(individual.code, n)
 
-    num_signs = [(-1 if bits[0] == '0' else 1, (int(bits[1:])))
+    num_signs = [(-1 if bits[0] == '0' else 1, int((float(bits))))
                   for bits in bits_list]
 
 
@@ -76,8 +76,8 @@ def decoder_d(individual):
     n = 4
     bits_list = string_split(individual.code, n)
 
-    num_signs = [(-1 if bits[0] == '0' else 1, int(bits[1:]))
-                  for bits in bits_list]
+    num_signs = [(-1 if bits[0] == '0' else 1, int(float(bits)))
+                 for bits in bits_list]
 
     ilist = [sign * (num % 5.12) for sign, num in num_signs]
 
