@@ -4,7 +4,7 @@ import matplotlib.pyplot as plot
 #Global Variables and Inputs
 poplength = 40
 generations = 100000
-bitlength = 16
+bitlength = 20
 crossover_rate = 0.4
 mutation_rate = 0.04
 
