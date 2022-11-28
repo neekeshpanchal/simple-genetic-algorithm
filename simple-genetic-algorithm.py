@@ -4,7 +4,7 @@ import matplotlib.pyplot as plot
 #Global Variables and Inputs
 poplength = 40
 generations = 100000
-bitlength = 20
+bitlength = 24
 crossover_rate = 0.4
 mutation_rate = 0.04
 
@@ -53,6 +53,8 @@ def string_split(code, n):
 def decoder_r(individual):
     n = 3
     bits_list = string_split(individual.code, n)
+    print(bits_list)
+
 
     num_signs = [(-1 if bits[0] == '0' else 1, int((float(bits))))
                   for bits in bits_list]
@@ -60,6 +62,8 @@ def decoder_r(individual):
 
     x = [sign * (num % 2.048) for sign, num in num_signs]
     individual.decoded = x
+
+    print(x)
 
     if x == [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]:
         print("""Found the Optimal Value \n
@@ -158,7 +162,7 @@ def reproduction(organisms, OF, choice):
         elif choice == 2:
             return (1/(fitness - minimum_fitness + 1))
         
-    # Organize weights according to the total weight
+    # Organize weights according to the total weight (Biased Roulette % of Total Calculation)
     weights = [(organism, weight(organism)) for organism in organisms]
     weights_total = sum(x for organism, x in weights)
     all = [(node, x/weights_total) for node, x in weights]
@@ -168,13 +172,13 @@ def reproduction(organisms, OF, choice):
 
     for i in range(len(organisms)):
         rand = random.random()
-        cumulative = 0
-        for organism, end in all:
-            cumulative += end
-            if rand <= cumulative:
+        total = 0
+        for organism, bias in all:
+            total += bias
+            if rand <= total:
                 population_new.append(organism)
                 break 
-
+    
     print('\n'.join(map(str, population_new)))
 
     return population_new
@@ -184,7 +188,7 @@ def crossover(bin1, bin2, indice):
     node_i, node_j = bin1.code[:indice], bin1.code[indice:]
     node_i1, node_j1 = bin2.code[:indice], bin2.code[indice:]
 
-    return node_i+node_j1, node_j+node_i1
+    return node_i+node_j1, node_i1+node_j
 
 def complete_crossover(population, crossover_rate):
 
@@ -247,5 +251,7 @@ def ga():
         organisms = reproduction(organisms, OF, choice)
         organisms = complete_crossover(organisms, crossover_rate)
         organisms = population_mutation(organisms, mutation_rate)
+
+
 
 ga()
