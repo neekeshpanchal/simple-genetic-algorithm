@@ -3,7 +3,7 @@ import matplotlib.pyplot as plot
 
 #Global Variables and Inputs
 poplength = 40
-generations = 100000
+generations = 10000
 bitlength = 24
 crossover_rate = 0.4
 mutation_rate = 0.04
@@ -163,21 +163,27 @@ def reproduction(organisms, OF, choice):
             return (1/(fitness - minimum_fitness + 1))
         
     # Organize weights according to the total weight (Biased Roulette % of Total Calculation)
-    weights = [(organism, weight(organism)) for organism in organisms]
-    weights_total = sum(x for organism, x in weights)
-    all = [(node, x/weights_total) for node, x in weights]
- 
-
+    weights = []
+    weights_total = 0
+    for organism in organisms:
+        weights.append((organism, weight(organism)))
+        weights_total += weight(organism)
+    all = []
+    sum_of_weights_ratio = 0
+    for node,x in weights:
+        all.append((node, x/weights_total))
+        sum_of_weights_ratio += (x/weights_total)
     population_new = []
-
-    for i in range(len(organisms)):
-        rand = random.random()
+    weights.sort(key=lambda x:x[1], reverse=True)
+    for j in range(len(organisms)):
+        rand = random.uniform(0,sum_of_weights_ratio) + j/10000
         total = 0
         for organism, bias in all:
-            total += bias
-            if rand <= total:
+            total+= bias
+            if rand<=total:
                 population_new.append(organism)
-                break 
+                break
+
     
     print('\n'.join(map(str, population_new)))
 
@@ -230,6 +236,14 @@ def population_mutation(population, mutation_rate):
 
     return population
 
+def plot_gen_diagram(best, worst, avg, generation):
+    plot.plot(range(0,generation+1), best, label="min pop fitness")
+    plot.plot(range(0,generation+1), worst, label="max pop fitness")
+    plot.plot(range(0,generation+1),avg, label = "avg pop fitness")
+    plot.legend()
+    plot.show()
+    return
+
 def ga():
 
     organisms = population_generate(poplength, bitlength)
@@ -243,15 +257,21 @@ def ga():
     if indicator == 'd':
         OF = lambda code: dejong(decoder_d(code))
 
-
+    best = []
+    worst = []
+    avg = []
     for generation in range(generations):
 
         print('Generation: ' + str(generation)) 
 
         organisms = reproduction(organisms, OF, choice)
+        sorted_organisms = sorted(organisms, key = lambda x: x.fitness)
         organisms = complete_crossover(organisms, crossover_rate)
         organisms = population_mutation(organisms, mutation_rate)
-
+        best.append(sorted_organisms[0].fitness)
+        worst.append(sorted_organisms[len(sorted_organisms)-1].fitness)
+        avg.append(sorted_organisms[int(len(sorted_organisms)/2)].fitness)
+    plot_gen_diagram(best, worst, avg, generation)
 
 
 ga()
