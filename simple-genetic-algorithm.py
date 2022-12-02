@@ -3,12 +3,12 @@ import matplotlib.pyplot as plot
 
 #Global Variables and Inputs
 poplength = 40
-generations = 10000
+generations = 30
 bitlength = 24
 crossover_rate = 0.4
 mutation_rate = 0.04
 
-
+#User input 
 indicator = input("""
 Select your Function: \n
     (r) Rosenbrock's Valley
@@ -18,11 +18,14 @@ Select your Function: \n
 
 choice = int(input("""
 Select your choice of optimization: \n
-    (1) Optimize
-    (2) Optimize Please \n"""))
+    (1) Natural Selection
+    (2) Eliteism \n"""))
 
     
-#Organism
+'''
+This is the class definition for each 
+Organism in the population. 
+'''
 class Organism:
 
     def __init__(self, code):
@@ -34,7 +37,11 @@ class Organism:
 
         return 'DNA Code: ' + str(self.code) + ' Fitness: ' + str(self.fitness)
 
-# Objective Functions
+'''
+The Objective function takes the binary
+genome and tells us how good/fit the 
+genome is. 
+'''
 def rosenbrockvalley(x):
     xrange = range(len(x)-1)
     return sum(100 * (x[i+1] - x[i]**2)**2 + (1-x[i])**2 for i in xrange)
@@ -47,9 +54,21 @@ def dejong(x):
 
 # Objective Function Auxiliary
 
+'''
+This is an objective function which splits the 
+string and returns all substrings. 
+input: string, int
+output: list[string]
+'''
 def string_split(code, n):
     return [code[i:i+n] for i in range(0, len(code), n)]
 
+'''
+This is the decoder for the rosenbrockvalley 
+objective function. 
+input: organism class object
+output: decoded genome
+'''
 def decoder_r(individual):
     n = 3
     bits_list = string_split(individual.code, n)
@@ -75,7 +94,12 @@ def decoder_r(individual):
         exit(0)
 
     return x
-
+'''
+This is the decoder for De jong objective 
+function. 
+input: Organism class object 
+output: decoded genome
+'''
 def decoder_d(individual):
     n = 4
     bits_list = string_split(individual.code, n)
@@ -93,7 +117,12 @@ def decoder_d(individual):
             exit(0)
 
     return ilist
-
+'''
+This is the decoder for the HimmelBlau's 
+Objective funtion.
+input: organism class object
+output: decoded genome
+'''
 def decoder_h(individual):
     mid = int(len(individual.code)/2)
     # Separate X and Y parameters
@@ -116,25 +145,51 @@ def decoder_h(individual):
             exit(0)
 
     return x, y
-
+'''
+This gives the interval between highest and lowest
+given the multiplier and steps. 
+input: lowest integer, highest integer, 
+multiplier integer, steps integer
+output: interval integer
+'''
 def interval(lowest, highest, m, steps):
     step_size = (highest - lowest)/steps 
     return lowest + m*step_size
 
 # Population Generation Methods
 
+'''
+Finds if the input probabily if greater than
+the randomized.
+input: floating probability
+output: boolean 
+'''
 def chance(probability):
 
     return random.random() > probability
-
+'''
+Creates a random binary for the given bit
+length.
+input: integer bitlength
+output: binary string
+'''
 def random_binary(bitlength):
 
     return ''.join('0' if chance(0.5) else '1' for _ in range(bitlength))
-
+'''
+Initializes the organism object based on 
+the input genome.
+input: string 
+output: Organism class object
+'''
 def init_organism(dna):
-
     return Organism(dna)
-
+'''
+Generate a population of varied organisms of random
+DNA sequence
+input: population length int, dna length int
+output: List[string]
+'''
 def population_generate(poplength, bitlength):
 
     dnalist = []
@@ -147,20 +202,24 @@ def population_generate(poplength, bitlength):
 
 # Genetic Algorithm Operators
 
-def reproduction(organisms, OF, choice):
+'''
+This function using a biased roullete chooses
+which organism objects proceed into the next generation
+input: List[organisms], Lambda objective function, 
+int selection choice
+output: List[organisms]
+'''
+def reproduction(organisms, OF, gen):
     
     minimum_fitness = min(OF(organism) for organism in organisms)
 
     def weight(organism):
-
-        fitness = OF(organism)
-        organism.fitness = fitness
-
-        if choice == 1:
-            return (fitness - minimum_fitness + 1)
-
-        elif choice == 2:
-            return (1/(fitness - minimum_fitness + 1))
+        if gen == 0:
+            fitness = OF(organism)
+            organism.fitness = fitness
+        else:
+            fitness = organism.fitness
+        return (fitness - minimum_fitness + 1)
         
     # Organize weights according to the total weight (Biased Roulette % of Total Calculation)
     weights = []
@@ -174,7 +233,6 @@ def reproduction(organisms, OF, choice):
         all.append((node, x/weights_total))
         sum_of_weights_ratio += (x/weights_total)
     population_new = []
-    weights.sort(key=lambda x:x[1], reverse=True)
     for j in range(len(organisms)):
         rand = random.uniform(0,sum_of_weights_ratio) + j/10000
         total = 0
@@ -189,14 +247,24 @@ def reproduction(organisms, OF, choice):
 
     return population_new
 
-
+'''
+Auxillary function which splices the gene on the given
+index and swaps binary code.
+input: string gene1, string gene2, int index
+output stiring gene1, string gene2
+'''
 def crossover(bin1, bin2, indice):
     node_i, node_j = bin1.code[:indice], bin1.code[indice:]
     node_i1, node_j1 = bin2.code[:indice], bin2.code[indice:]
 
     return node_i+node_j1, node_i1+node_j
-
-def complete_crossover(population, crossover_rate):
+'''
+Randomly chooses a pair of binary genes within a population
+and swaps binary code between the two
+input: List[Organisms], float probability
+output: List[Organisms]
+'''
+def complete_crossover(population, crossover_rate, OF):
 
     node_pairs = []
     final_population = []
@@ -216,11 +284,19 @@ def complete_crossover(population, crossover_rate):
         else:
             index = random.randint(1, len(x1.code) - 1)
             new_x1, new_x2 = crossover(x1, x2, index)
-            final_population.append(init_organism(new_x1))
-            final_population.append(init_organism(new_x2))
+            org1 = init_organism(new_x1)
+            org1.fitness = OF(org1) 
+            final_population.append(org1)
+            org2 = init_organism(new_x2)
+            org2.fitness = OF(org2)
+            final_population.append(org2)
 
     return final_population
-
+'''
+Auxilary flips a binary bit of an organism
+input: organism class object, float probability
+output: string
+'''
 def mutation(organism, mutation_rate):
     
     flip = lambda x: '1' if x == '0' else '0'
@@ -228,22 +304,42 @@ def mutation(organism, mutation_rate):
     character = (flip(character) if chance(mutation_rate) else character for character in organism.code)
 
     return ''.join(character)
-
-def population_mutation(population, mutation_rate):
+'''
+Iterates through the list of organisms and mutates the 
+binary code according to the mutation rate
+input: List[organism], flat probability
+output: List[organism]
+'''
+def population_mutation(population, mutation_rate, OF):
 
     for organism in population:
-        organism.code = mutation(organism, mutation_rate)
+        if chance(mutation_rate):
+            organism.code = mutation(organism, mutation_rate)
+            organism.fitness = OF(organism)
 
     return population
 
+#Plotting results
+'''
+To plot the evolution graph
+input: List[float], list[float], list[float], int
+output: None
+'''
 def plot_gen_diagram(best, worst, avg, generation):
-    plot.plot(range(0,generation+1), best, label="min pop fitness")
-    plot.plot(range(0,generation+1), worst, label="max pop fitness")
-    plot.plot(range(0,generation+1),avg, label = "avg pop fitness")
+    plot.plot(range(0,generation), best, label="min pop fitness")
+    plot.plot(range(0,generation), worst, label="max pop fitness")
+    plot.plot(range(0,generation),avg, label = "avg pop fitness")
     plot.legend()
+    plot.title('Evolution')
+    plot.xlabel('Generations')
+    plot.ylabel('Fitness')
     plot.show()
     return
-
+'''
+Controller function for the algorithm
+input: None
+output: None
+'''
 def ga():
 
     organisms = population_generate(poplength, bitlength)
@@ -262,15 +358,29 @@ def ga():
     avg = []
     for generation in range(generations):
 
-        print('Generation: ' + str(generation)) 
+        
+        if generation != 0 and choice != 1:
+            organisms.sort(key= lambda x: x.fitness)
+            best.append(organisms[0].fitness)
+            worst.append(organisms[len(organisms)-1].fitness)
+            avg.append(organisms[int(len(organisms)/2)].fitness)
+            best_fit = organisms.pop(0)
+            print(str(best_fit))
+        elif generation != 0:
+            organisms.sort(key= lambda x: x.fitness)
+            best.append(organisms[0].fitness)
+            worst.append(organisms[len(organisms)-1].fitness)
+            avg.append(organisms[int(len(organisms)/2)].fitness)
 
-        organisms = reproduction(organisms, OF, choice)
-        sorted_organisms = sorted(organisms, key = lambda x: x.fitness)
-        organisms = complete_crossover(organisms, crossover_rate)
-        organisms = population_mutation(organisms, mutation_rate)
-        best.append(sorted_organisms[0].fitness)
-        worst.append(sorted_organisms[len(sorted_organisms)-1].fitness)
-        avg.append(sorted_organisms[int(len(sorted_organisms)/2)].fitness)
+        print('Generation: ' + str(generation)) 
+        organisms = reproduction(organisms, OF, generation)
+        organisms = complete_crossover(organisms, crossover_rate, OF)
+        organisms = population_mutation(organisms, mutation_rate, OF)
+
+        if generation != 0 and choice != 1:
+            organisms.append(best_fit)
+
+
     plot_gen_diagram(best, worst, avg, generation)
 
 
