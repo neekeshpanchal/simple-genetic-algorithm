@@ -1,9 +1,11 @@
 import random
 import matplotlib.pyplot as plot
+import plotly.graph_objects as go
+
 
 #Global Variables and Inputs
 poplength = 40
-generations = 30
+generations = 10000
 bitlength = 24
 crossover_rate = 0.4
 mutation_rate = 0.04
@@ -70,9 +72,9 @@ input: organism class object
 output: decoded genome
 '''
 def decoder_r(individual):
-    n = 3
+    n = int(len(individual.code)/2)
     bits_list = string_split(individual.code, n)
-    print(bits_list)
+    #print(bits_list)
 
 
     num_signs = [(-1 if bits[0] == '0' else 1, int((float(bits))))
@@ -82,7 +84,7 @@ def decoder_r(individual):
     x = [sign * (num % 2.048) for sign, num in num_signs]
     individual.decoded = x
 
-    print(x)
+    #print(x)
 
     if x == [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]:
         print("""Found the Optimal Value \n
@@ -101,7 +103,7 @@ input: Organism class object
 output: decoded genome
 '''
 def decoder_d(individual):
-    n = 4
+    n = int(len(individual.code)/2)
     bits_list = string_split(individual.code, n)
 
     num_signs = [(-1 if bits[0] == '0' else 1, int(float(bits)))
@@ -243,7 +245,7 @@ def reproduction(organisms, OF, gen):
                 break
 
     
-    print('\n'.join(map(str, population_new)))
+    #print('\n'.join(map(str, population_new)))
 
     return population_new
 
@@ -335,6 +337,43 @@ def plot_gen_diagram(best, worst, avg, generation):
     plot.ylabel('Fitness')
     plot.show()
     return
+
+'''
+To plot the evolution graph
+input: List[organism], List[Tuple(organism,int)]
+output: None
+'''
+def new_plot(organisms, min):
+    x1 = []
+    x2 = []
+    fit = []
+
+    for i in organisms:
+        x1.append(i[0].decoded[0])
+        x2.append(i[0].decoded[1])
+        fit.append(i[0].fitness)
+    
+    fig = go.Figure(layout=dict(scene = dict(xaxis_title ='x1',yaxis_title ='x2',zaxis_title ='f')))
+
+    fig.add_scatter3d(x=x1,y=x2,z=fit,mode='markers',marker=dict(color=fit))
+    if(len(min) == 1):
+        min = min[0][0]
+        fig.add_traces(go.Scatter3d(x=[min.decoded[0]],y=[min.decoded[1]],z=[min.fitness],mode='markers',marker=dict(color='cyan')))
+    else:
+        min_x1 = []
+        min_x2 = []
+        min_fit = []
+
+        for i in min:
+            min_x1.append(i[0].decoded[0])
+            min_x2.append(i[0].decoded[1])
+            min_fit.append(i[0].fitness)
+
+        fig.add_traces(go.Scatter3d(x=min_x1,y=min_x2,z=min_fit,mode='markers',marker=dict(color='cyan')))
+
+    fig.show()
+    return
+
 '''
 Controller function for the algorithm
 input: None
@@ -356,32 +395,48 @@ def ga():
     best = []
     worst = []
     avg = []
+    minima = []
     for generation in range(generations):
 
         
         if generation != 0 and choice != 1:
             organisms.sort(key= lambda x: x.fitness)
-            best.append(organisms[0].fitness)
-            worst.append(organisms[len(organisms)-1].fitness)
-            avg.append(organisms[int(len(organisms)/2)].fitness)
-            best_fit = organisms.pop(0)
-            print(str(best_fit))
+            best.append((organisms[0],generation))
+            #worst.append(organisms[len(organisms)-1].fitness)
+            #avg.append(organisms[int(len(organisms)/2)].fitness)
+            #best_fit = organisms.pop(0)
+            #print(str(best_fit))
         elif generation != 0:
             organisms.sort(key= lambda x: x.fitness)
-            best.append(organisms[0].fitness)
-            worst.append(organisms[len(organisms)-1].fitness)
-            avg.append(organisms[int(len(organisms)/2)].fitness)
+            best.append((organisms[0],generation))
+            #worst.append(organisms[len(organisms)-1].fitness)
+            #avg.append(organisms[int(len(organisms)/2)].fitness)
 
         print('Generation: ' + str(generation)) 
         organisms = reproduction(organisms, OF, generation)
         organisms = complete_crossover(organisms, crossover_rate, OF)
         organisms = population_mutation(organisms, mutation_rate, OF)
-
+        
+        """ 
         if generation != 0 and choice != 1:
             organisms.append(best_fit)
+            """
 
+    print("-------------------------------------")
 
-    plot_gen_diagram(best, worst, avg, generation)
+    for i in best:
+        if(len(minima) == 0):
+            minima.append(i)
+        elif(i[0].fitness < minima[0][0].fitness):
+            minima = []
+            minima.append(i)
+        elif(i[0].fitness == minima[0][0].fitness):
+            minima.append(i)
+    #plot_gen_diagram(best, worst, avg, generation)
+    for i in minima:
+        print("Organism: {}   Fitness: {}  Minimum Point: {} Generation: {}".format(i[0].code,i[0].fitness,i[0].decoded,i[1]))
+    new_plot(best,minima)
+
 
 
 ga()
