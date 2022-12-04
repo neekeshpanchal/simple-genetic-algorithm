@@ -1,6 +1,7 @@
 import random
 import matplotlib.pyplot as plot
 import plotly.graph_objects as go
+from OFs import of1, of2, of3
 
 
 #Global Variables and Inputs
@@ -15,8 +16,20 @@ indicator = input("""
 Select your Function: \n
     (r) Rosenbrock's Valley
     (h) Himmelblau Function
-    (d) De Jong Sphere Function \n
+    (d) De Jong Sphere Function
+    (i) 2cc Objective Function 25
+    (s) 2cc Objective Function 59
+    (k) 2cc Objective Function 99 \n
 """)
+
+if indicator == 'i':
+    bitlength = 51
+
+if indicator =='s':
+    bitlength = 119
+
+if indicator =='k':
+    bitlength = 199
 
 choice = int(input("""
 Select your choice of optimization: \n
@@ -71,6 +84,8 @@ objective function.
 input: organism class object
 output: decoded genome
 '''
+
+
 def decoder_r(individual):
     n = int(len(individual.code)/2)
     bits_list = string_split(individual.code, n)
@@ -392,6 +407,15 @@ def ga():
     if indicator == 'd':
         OF = lambda code: dejong(decoder_d(code))
 
+    if indicator == 'i':
+        OF = lambda code: of1(code)
+
+    if indicator == 's':
+        OF = lambda code: of2(code)
+
+    if indicator == 'k':
+        OF = lambda code: of3(code)
+
     best3D = []
     best2D = []
     avg2D  = []
@@ -439,7 +463,16 @@ def ga():
     else:
         #this if statement is for eliteism 
         print("Organism: {}   Fitness: {}  Minimum Point: {} Generation: {}".format(minima[0][0].code,minima[0][0].fitness,minima[0][0].decoded,minima[0][1]))
-    new_plot(best3D,minima)
+   
+    if indicator == 'r':
+        new_plot(best3D,minima)
+
+    if indicator == 'h':
+        new_plot(best3D,minima) 
+
+    if indicator == 'd':
+        new_plot(best3D,minima)
+
     plot_gen_diagram(best2D, avg2D, generation)
 
 
