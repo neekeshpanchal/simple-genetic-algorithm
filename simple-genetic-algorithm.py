@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 
 #Global Variables and Inputs
 poplength = 40
-generations = 10000
+generations = 1000
 bitlength = 24
 crossover_rate = 0.4
 mutation_rate = 0.04
@@ -135,6 +135,7 @@ def decoder_h(individual):
 
     x = interval(-4, 4, xmult, 2**len(binx))
     y = interval(-4, 4, ymult, 2**len(biny))
+    individual.decoded = (x,y)
 
     if x == 3.0 and y== 2.0 or x == -2.805118 and y == 3.131312 or x == -3.779310 and y == -3.283186 or x == 3.584428 and y == -1.848126:
             print("FOUND THE GLOBAL MINIMA VALUE:\nGlobal Minima: " + str(individual.code) + '\n' "Fitness: " + str(individual.fitness))
@@ -323,13 +324,12 @@ def population_mutation(population, mutation_rate, OF):
 
 #Plotting results
 '''
-To plot the evolution graph
+To plot the 2D evolution graph
 input: List[float], list[float], list[float], int
 output: None
 '''
-def plot_gen_diagram(best, worst, avg, generation):
+def plot_gen_diagram(best, avg, generation):
     plot.plot(range(0,generation), best, label="min pop fitness")
-    plot.plot(range(0,generation), worst, label="max pop fitness")
     plot.plot(range(0,generation),avg, label = "avg pop fitness")
     plot.legend()
     plot.title('Evolution')
@@ -339,7 +339,7 @@ def plot_gen_diagram(best, worst, avg, generation):
     return
 
 '''
-To plot the evolution graph
+To plot the 3D evolution graph
 input: List[organism], List[Tuple(organism,int)]
 output: None
 '''
@@ -392,39 +392,40 @@ def ga():
     if indicator == 'd':
         OF = lambda code: dejong(decoder_d(code))
 
-    best = []
-    worst = []
-    avg = []
+    best3D = []
+    best2D = []
+    avg2D  = []
     minima = []
     for generation in range(generations):
 
         
         if generation != 0 and choice != 1:
+            #This is for elitisim and picking the best organism
             organisms.sort(key= lambda x: x.fitness)
-            best.append((organisms[0],generation))
-            #worst.append(organisms[len(organisms)-1].fitness)
-            #avg.append(organisms[int(len(organisms)/2)].fitness)
-            #best_fit = organisms.pop(0)
-            #print(str(best_fit))
+            best3D.append((organisms[0],generation))
+            best2D.append(organisms[0].fitness)
+            avg2D.append(organisms[int(len(organisms)/2)].fitness)
+            best_fit = organisms.pop(0)
         elif generation != 0:
             organisms.sort(key= lambda x: x.fitness)
-            best.append((organisms[0],generation))
-            #worst.append(organisms[len(organisms)-1].fitness)
-            #avg.append(organisms[int(len(organisms)/2)].fitness)
+            best3D.append((organisms[0],generation))
+            best2D.append(organisms[0].fitness)
+            avg2D.append(organisms[int(len(organisms)/2)].fitness)
 
         print('Generation: ' + str(generation)) 
         organisms = reproduction(organisms, OF, generation)
         organisms = complete_crossover(organisms, crossover_rate, OF)
         organisms = population_mutation(organisms, mutation_rate, OF)
         
-        """ 
+        
         if generation != 0 and choice != 1:
+            #This is for elitism and placing back the best organism 
             organisms.append(best_fit)
-            """
+
 
     print("-------------------------------------")
 
-    for i in best:
+    for i in best3D:
         if(len(minima) == 0):
             minima.append(i)
         elif(i[0].fitness < minima[0][0].fitness):
@@ -432,10 +433,14 @@ def ga():
             minima.append(i)
         elif(i[0].fitness == minima[0][0].fitness):
             minima.append(i)
-    #plot_gen_diagram(best, worst, avg, generation)
-    for i in minima:
-        print("Organism: {}   Fitness: {}  Minimum Point: {} Generation: {}".format(i[0].code,i[0].fitness,i[0].decoded,i[1]))
-    new_plot(best,minima)
+    if choice == 1:
+        for i in minima:
+            print("Organism: {}   Fitness: {}  Minimum Point: {} Generation: {}".format(i[0].code,i[0].fitness,i[0].decoded,i[1]))
+    else:
+        #this if statement is for eliteism 
+        print("Organism: {}   Fitness: {}  Minimum Point: {} Generation: {}".format(minima[0][0].code,minima[0][0].fitness,minima[0][0].decoded,minima[0][1]))
+    new_plot(best3D,minima)
+    plot_gen_diagram(best2D, avg2D, generation)
 
 
 
